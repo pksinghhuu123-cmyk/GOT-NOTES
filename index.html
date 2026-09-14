@@ -1,0 +1,3116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GOT NOTES</title>
+  <!-- Curated Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Cinzel:wght@600&family=Dancing+Script:wght@600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- Supabase Official JavaScript Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg-base: #0a0c10;
+      --bg-surface: rgba(18, 22, 31, 0.78);
+      --bg-card: rgba(255, 255, 255, 0.035);
+      --bg-card-hover: rgba(255, 255, 255, 0.075);
+      --bg-active: rgba(99, 102, 241, 0.18);
+      --border-subtle: rgba(255, 255, 255, 0.09);
+      --border-glass: rgba(255, 255, 255, 0.16);
+      --text-main: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.15);
+      --warning: #f59e0b;
+      --modal-bg: #12161f;
+      --shadow-ambient: 0 16px 40px -10px rgba(0, 0, 0, 0.65);
+      --editor-canvas-bg: rgba(255, 255, 255, 0.02);
+      --editor-border: rgba(255, 255, 255, 0.11);
+    }
+
+    [data-theme="light"] {
+      --bg-base: #f4f6f9;
+      --bg-surface: rgba(255, 255, 255, 0.88);
+      --bg-card: rgba(0, 0, 0, 0.025);
+      --bg-card-hover: rgba(0, 0, 0, 0.05);
+      --bg-active: rgba(99, 102, 241, 0.12);
+      --border-subtle: rgba(0, 0, 0, 0.09);
+      --border-glass: rgba(0, 0, 0, 0.16);
+      --text-main: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #9ca3af;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-glow: rgba(79, 70, 229, 0.25);
+      --danger: #dc2626;
+      --danger-bg: rgba(220, 38, 38, 0.1);
+      --warning: #d97706;
+      --modal-bg: #ffffff;
+      --shadow-ambient: 0 16px 40px -10px rgba(0, 0, 0, 0.12);
+      --editor-canvas-bg: rgba(255, 255, 255, 0.9);
+      --editor-border: rgba(0, 0, 0, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-base);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .top-header {
+      height: 56px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      backdrop-filter: blur(24px);
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .font-select-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      padding: 5px 12px;
+      border-radius: 20px;
+      color: var(--text-main);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .font-select-pill:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glass);
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+
+    .avatar-header-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 2px solid var(--border-glass);
+      cursor: pointer;
+      font-size: 21px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      user-select: none;
+    }
+
+    .avatar-header-btn:hover {
+      border-color: var(--primary);
+      transform: scale(1.1);
+      box-shadow: 0 0 14px var(--primary-glow);
+    }
+
+    .avatar-header-btn:active {
+      transform: scale(0.95);
+    }
+
+    .vault-status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-subtle);
+      padding: 5px 12px;
+      border-radius: 18px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+    .vault-status-pill:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glass);
+      color: var(--text-main);
+      transform: translateY(-1px);
+    }
+    .vault-status-pill:active {
+      transform: scale(0.96);
+    }
+    .vault-status-pill.is-unsaved {
+      border-color: rgba(245, 158, 11, 0.7);
+      background: rgba(245, 158, 11, 0.12);
+      color: #f59e0b;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+    }
+    .vault-status-pill.is-unsaved .vault-status-dot {
+      background: #f59e0b !important;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.95);
+      animation: pulseDot 0.8s infinite alternate;
+    }
+    .vault-status-pill.is-saving {
+      border-color: rgba(251, 191, 36, 0.8);
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+    .vault-status-pill.is-saving .vault-status-dot {
+      background: #fbbf24 !important;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 1);
+      animation: pulseDot 0.5s infinite alternate;
+    }
+    .vault-status-pill.is-saved {
+      border-color: rgba(34, 197, 94, 0.45);
+      color: var(--text-main);
+    }
+    .vault-status-pill.is-saved .vault-status-dot {
+      background: #22c55e !important;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+      animation: none;
+    }
+    .vault-status-dot {
+      width: 8.5px;
+      height: 8.5px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 7px rgba(34, 197, 94, 0.8);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .vault-status-dot.syncing {
+      background: #f59e0b;
+      box-shadow: 0 0 7px rgba(245, 158, 11, 0.8);
+      animation: pulseDot 0.8s infinite alternate;
+    }
+    .vault-status-dot.offline {
+      background: #6b7280;
+      box-shadow: 0 0 7px rgba(107, 114, 128, 0.8);
+    }
+    .vault-status-dot.error {
+      background: #ef4444;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.9);
+      animation: pulseDot 0.8s infinite alternate;
+    }
+    @keyframes pulseDot {
+      from { transform: scale(0.85); opacity: 0.6; }
+      to { transform: scale(1.25); opacity: 1; }
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+
+    .main-workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .sidebar-panel {
+      width: 220px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 40;
+    }
+
+    .sidebar-header {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .sidebar-nav-tabs {
+      display: flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .sidebar-tab-btn {
+      flex: 1;
+      padding: 6px 4px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .sidebar-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 6px var(--primary-glow);
+    }
+
+    .sidebar-tab-btn.active.trash-active {
+      background: var(--danger);
+      box-shadow: 0 1px 6px rgba(239, 68, 68, 0.35);
+    }
+
+    .tab-counter-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .sidebar-action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .new-note-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px var(--primary-glow);
+      transition: background 0.15s ease, transform 0.1s ease;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .new-note-btn:active {
+      transform: scale(0.97);
+    }
+
+    .trash-action-btn {
+      background: var(--danger-bg);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--danger);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .trash-action-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .search-wrap {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 7px;
+      padding: 7px 10px;
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    .input-password-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .search-input.has-eye-btn {
+      padding-right: 38px !important;
+    }
+
+    .eye-toggle-btn {
+      position: absolute;
+      right: 7px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .eye-toggle-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-scroll-pane {
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 8px;
+    }
+
+    .sidebar-scroll-pane::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sidebar-scroll-pane::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 10px;
+    }
+
+    .note-card-item {
+      padding: 9px 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .note-card-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glass);
+      transform: translateY(-1px);
+    }
+
+    .note-card-item.active {
+      background: var(--bg-active);
+      border-color: rgba(99, 102, 241, 0.45);
+      border-left: 3px solid var(--primary);
+    }
+
+    .note-card-item.in-trash {
+      border-left: 3px solid var(--danger);
+    }
+
+    .note-title-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      margin-right: 6px;
+    }
+
+    .note-badges-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .badge-icon {
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 4px;
+      transition: all 0.12s ease;
+      font-size: 11px;
+    }
+
+    .badge-icon:hover {
+      color: var(--text-main);
+      transform: scale(1.15);
+    }
+    .badge-icon.is-pinned {
+      color: #eab308;
+    }
+    .badge-icon.is-starred {
+      color: #f59e0b;
+    }
+    .badge-icon.restore-btn {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 5px;
+    }
+    .badge-icon.restore-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .editor-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg-base);
+      overflow: hidden;
+    }
+
+    .editor-toolbar {
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .tool-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.12s ease;
+    }
+
+    .tool-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+
+    .tool-btn.is-active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+
+    .tool-sep {
+      width: 1px;
+      height: 18px;
+      background: var(--border-subtle);
+      margin: 0 3px;
+    }
+
+    .hl-capsule {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    [data-theme="light"] .hl-capsule {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .hl-off-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+
+    .hl-off-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: var(--text-main);
+    }
+
+    .hl-off-btn.active-off {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: rgba(239, 68, 68, 0.6);
+      color: #fca5a5;
+    }
+
+    .hl-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+
+    .hl-dot:hover {
+      transform: scale(1.18);
+    }
+
+    .hl-dot.active-sticky {
+      transform: scale(1.24);
+      border-color: #ffffff !important;
+      box-shadow: 0 0 0 2px #fff, 0 0 8px currentColor;
+    }
+
+    .hl-dot.yellow { background: #eab308; }
+    .hl-dot.green  { background: #22c55e; }
+    .hl-dot.blue   { background: #3b82f6; }
+    .hl-dot.red    { background: #ef4444; }
+    .hl-dot.purple { background: #a855f7; }
+
+    /* DYNAMIC SAVE BADGE & BUTTON (YELLOW TO GREEN STATUS) */
+    .save-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+      background: var(--bg-card);
+    }
+
+    .save-status-badge:hover {
+      transform: translateY(-1px);
+    }
+
+    .save-status-badge:active {
+      transform: scale(0.96);
+    }
+
+    .save-badge-dot {
+      width: 8.5px;
+      height: 8.5px;
+      border-radius: 50%;
+      transition: all 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .save-status-badge.is-saved {
+      background: rgba(34, 197, 94, 0.12);
+      border-color: rgba(34, 197, 94, 0.45);
+      color: #22c55e;
+    }
+    .save-status-badge.is-saved .save-badge-dot {
+      background: #22c55e;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+      animation: none;
+    }
+
+    .save-status-badge.is-unsaved {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: rgba(245, 158, 11, 0.6);
+      color: #f59e0b;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+    }
+    .save-status-badge.is-unsaved .save-badge-dot {
+      background: #f59e0b;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.95);
+      animation: pulseDot 0.9s infinite alternate;
+    }
+
+    .save-status-badge.is-saving {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: rgba(245, 158, 11, 0.85);
+      color: #fbbf24;
+    }
+    .save-status-badge.is-saving .save-badge-dot {
+      background: #fbbf24;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 1);
+      animation: pulseDot 0.6s infinite alternate;
+    }
+
+    .trash-banner-alert {
+      background: var(--danger-bg);
+      border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 8px 18px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .trash-banner-restore-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .editor-scroll-pane {
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 24px 34px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .editor-scroll-pane::-webkit-scrollbar {
+      width: 6px;
+    }
+    .editor-scroll-pane::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 10px;
+    }
+
+    .note-title-field {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-main);
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+      padding: 4px 6px;
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.15s ease;
+    }
+
+    .note-title-field:focus {
+      border-bottom-color: var(--primary);
+    }
+
+    .note-title-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .note-canvas-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .note-content-area {
+      flex: 1;
+      font-size: 15.5px;
+      line-height: 1.7;
+      color: var(--text-main);
+      outline: none;
+      min-height: 420px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: var(--editor-canvas-bg);
+      border: 1.5px solid var(--editor-border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      caret-color: var(--primary);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .note-content-area:focus {
+      border-color: var(--primary);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15), 0 0 0 3px var(--primary-glow);
+    }
+
+    .note-content-area[placeholder]:empty:before {
+      content: attr(placeholder);
+      color: var(--text-muted);
+      cursor: text;
+    }
+
+    mark.note-hl {
+      border-radius: 3px;
+      padding: 1px 3px;
+      color: inherit;
+      font-weight: inherit;
+    }
+    mark.hl-yellow { background: rgba(234, 179, 8, 0.45); }
+    mark.hl-green  { background: rgba(34, 197, 94, 0.45); }
+    mark.hl-blue   { background: rgba(59, 130, 246, 0.45); }
+    mark.hl-red    { background: rgba(239, 68, 68, 0.45); }
+    mark.hl-purple { background: rgba(168, 85, 247, 0.45); }
+
+    .todo-row-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 4px 0;
+      user-select: text;
+    }
+
+    .todo-checkbox-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1.5px solid var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 3px;
+      transition: all 0.12s ease;
+      background: var(--bg-card);
+    }
+
+    .todo-row-item.is-done .todo-checkbox-box {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .todo-checkbox-box svg {
+      display: none;
+      width: 12px;
+      height: 12px;
+      stroke: #ffffff;
+      stroke-width: 3;
+    }
+
+    .todo-row-item.is-done .todo-checkbox-box svg {
+      display: block;
+    }
+
+    .todo-row-item.is-done .todo-text-span {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .todo-text-span {
+      flex: 1;
+      outline: none;
+    }
+
+    .editor-status-bar {
+      height: 32px;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .modal-backdrop-wrap {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(14px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-card-box {
+      background: var(--modal-bg);
+      border: 1px solid var(--border-glass);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 600px;
+      padding: 22px;
+      box-shadow: var(--shadow-ambient);
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .modal-head-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close-x {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+    }
+    .modal-close-x:hover { color: var(--text-main); }
+
+    .avatar-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+
+    .avatar-choice-item {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .avatar-choice-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glass);
+      transform: translateY(-2px) scale(1.08);
+    }
+
+    .avatar-choice-item.selected {
+      border-color: var(--primary);
+      background: var(--bg-active);
+      box-shadow: 0 0 0 2px var(--primary);
+      transform: scale(1.1);
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .auth-tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .font-tester-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .font-tester-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    .font-tester-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-size: 13.5px;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .font-chips-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .font-chips-row::-webkit-scrollbar { display: none; }
+
+    .font-chip-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 5px 12px;
+      border-radius: 18px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .font-chip-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+
+    .font-gallery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-right: 4px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 540px) {
+      .font-gallery-grid { grid-template-columns: 1fr; }
+    }
+
+    .font-showcase-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.12s ease;
+    }
+
+    .font-showcase-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glass);
+      transform: translateY(-1px);
+    }
+
+    .font-showcase-card.is-active {
+      border-color: var(--primary);
+      background: var(--bg-active);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .font-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .font-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .font-type-pill {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .font-sample-view {
+      font-size: 15px;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .font-card-bot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 6px;
+    }
+
+    .font-apply-btn {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .font-upload-banner {
+      border: 1.5px dashed var(--border-glass);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      cursor: pointer;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .toast-popup {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(18, 22, 31, 0.94);
+      border: 1px solid var(--border-glass);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(16px);
+      display: none;
+      z-index: 9999;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar-panel {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 82%;
+        max-width: 320px;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+        transform: translateX(-100%);
+      }
+      .sidebar-panel.mobile-open {
+        transform: translateX(0);
+      }
+      .mobile-menu-btn {
+        display: inline-flex !important;
+      }
+      .editor-scroll-pane {
+        padding: 18px 20px 50px;
+      }
+    }
+    .mobile-menu-btn {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-header">
+    <div class="brand-cluster">
+      <button id="btnToggleMobileSidebar" class="icon-btn mobile-menu-btn" type="button" title="Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <div class="brand-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        <span>GOT NOTES</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Typography Studio Pill -->
+      <button id="btnOpenFontStudio" class="font-select-pill" type="button" title="Open Font Studio">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="4 7 4 4 20 4 20 7"/>
+          <line x1="9" y1="20" x2="15" y2="20"/>
+          <line x1="12" y1="4" x2="12" y2="20"/>
+        </svg>
+        <span id="activeFontLabel">Inter</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      <!-- Cloud Vault Realtime Indicator -->
+      <button id="btnVaultStatus" class="vault-status-pill" type="button" title="Cloud Vault Status & Connection">
+        <span id="vaultStatusDot" class="vault-status-dot"></span>
+        <span id="vaultHeaderLabel">Private Vault</span>
+      </button>
+
+      <!-- Avatar Profile Button with live icon -->
+      <button id="btnOpenProfile" class="avatar-header-btn" type="button" title="Profile & Avatar">
+        <span id="headerAvatarIcon">🌻</span>
+      </button>
+
+      <!-- Day / Night Mode Toggle -->
+      <button id="btnToggleTheme" class="icon-btn" type="button" title="Day / Night Theme">
+        <svg id="themeIconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="main-workspace">
+    <!-- Left Sidebar: Notes & Trash -->
+    <aside id="sidebarPanel" class="sidebar-panel">
+      <div class="sidebar-header">
+        <!-- Prominent Notes vs Trash Tabs -->
+        <div class="sidebar-nav-tabs">
+          <button id="tabNotesActive" class="sidebar-tab-btn active" type="button">
+            <span>📝 Notes</span>
+            <span id="badgeActiveCount" class="tab-counter-badge">0</span>
+          </button>
+          <button id="tabNotesTrash" class="sidebar-tab-btn" type="button">
+            <span>🗑️ Trash</span>
+            <span id="badgeTrashCount" class="tab-counter-badge">0</span>
+          </button>
+        </div>
+
+        <div class="sidebar-action-row">
+          <button id="btnNewNote" class="new-note-btn" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>New Note</span>
+          </button>
+          <button id="btnEmptyTrash" class="trash-action-btn" type="button" style="display:none;">
+            <span>Clear Trash</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <input type="text" id="inputSearchNotes" class="search-input" placeholder="Search notes by title..." />
+      </div>
+
+      <div id="notesListContainer" class="sidebar-scroll-pane">
+        <!-- Rendered notes titles only -->
+      </div>
+    </aside>
+
+    <main class="editor-panel">
+      <!-- Trash Warning Banner -->
+      <div id="trashWarningBanner" class="trash-banner-alert">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>🗑️</span>
+          <span>This note is in the Trash.</span>
+        </div>
+        <button id="btnRestoreFromBanner" class="trash-banner-restore-btn" type="button">
+          ↺ Restore Note
+        </button>
+      </div>
+
+      <div class="editor-toolbar">
+        <!-- Bold, Italic, Underline -->
+        <button id="btnFormatBold" class="tool-btn" type="button" title="Bold (Ctrl+B)" onpointerdown="event.preventDefault()"><b>B</b></button>
+        <button id="btnFormatItalic" class="tool-btn" type="button" title="Italic (Ctrl+I)" onpointerdown="event.preventDefault()"><i>I</i></button>
+        <button id="btnFormatUnderline" class="tool-btn" type="button" title="Underline (Ctrl+U)" onpointerdown="event.preventDefault()"><u>U</u></button>
+
+        <div class="tool-sep"></div>
+
+        <!-- Point List (Bullets) -->
+        <button id="btnFormatBullets" class="tool-btn" type="button" title="Point List (Bullets)" onpointerdown="event.preventDefault()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6" stroke-width="3"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="3"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="3"/>
+          </svg>
+        </button>
+
+        <!-- Number List -->
+        <button id="btnFormatNumbers" class="tool-btn" type="button" title="Number List" onpointerdown="event.preventDefault()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/>
+            <path d="M4 6h1v4"/><path d="M4 10h2"/>
+          </svg>
+        </button>
+
+        <!-- Interactive Checklist -->
+        <button id="btnInsertChecklist" class="tool-btn" type="button" title="Checklist" onpointerdown="event.preventDefault()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </button>
+
+        <div class="tool-sep"></div>
+
+        <!-- 5-Color Highlighters with OFF Button -->
+        <div class="hl-capsule">
+          <button id="btnHlOff" class="hl-off-btn active-off" type="button" title="Highlighter OFF (Type in normal text)" onpointerdown="event.preventDefault()">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <span>OFF</span>
+          </button>
+          <div class="tool-sep" style="height:14px; margin:0 2px;"></div>
+          <div id="dotHlYellow" class="hl-dot yellow" title="Yellow" onpointerdown="event.preventDefault()"></div>
+          <div id="dotHlGreen"  class="hl-dot green"  title="Green"  onpointerdown="event.preventDefault()"></div>
+          <div id="dotHlBlue"   class="hl-dot blue"   title="Blue"   onpointerdown="event.preventDefault()"></div>
+          <div id="dotHlRed"    class="hl-dot red"    title="Red"    onpointerdown="event.preventDefault()"></div>
+          <div id="dotHlPurple" class="hl-dot purple" title="Purple" onpointerdown="event.preventDefault()"></div>
+        </div>
+
+        <div style="flex:1;"></div>
+
+        <!-- Pin, Star, Trash -->
+        <button id="btnPinCurrentNote" class="tool-btn" type="button" title="Pin Note">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="17" x2="12" y2="22"/>
+            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
+          </svg>
+        </button>
+        <button id="btnStarCurrentNote" class="tool-btn" type="button" title="Star Favourite">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </button>
+        <button id="btnDeleteCurrentNote" class="tool-btn" type="button" title="Move to Trash" style="color:var(--danger);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>
+
+      <div id="editorScrollBox" class="editor-scroll-pane">
+        <input type="text" id="noteTitleInput" class="note-title-field" placeholder="Untitled Note" />
+        <div class="note-canvas-wrapper">
+          <div id="noteBodyArea" class="note-content-area" contenteditable="true" placeholder="Start typing your note here..."></div>
+        </div>
+      </div>
+
+      <!-- Footer Info Bar -->
+      <div class="editor-status-bar">
+        <span id="counterStatsLabel">0 words • 0 characters</span>
+        <span id="labelFooterFontName">Font: Inter</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- Typography Studio Modal -->
+  <div id="modalFontStudio" class="modal-backdrop-wrap">
+    <div class="modal-card-box">
+      <div class="modal-head">
+        <h3 class="modal-head-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="9" y1="20" x2="15" y2="20"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+          </svg>
+          Typography Studio
+        </h3>
+        <button id="btnCloseFontStudio" class="modal-close-x" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="font-tester-box">
+        <span class="font-tester-label">Live Preview Tester</span>
+        <input type="text" id="fontTesterInput" class="font-tester-input" placeholder="Type here to test all fonts live..." value="The quick brown fox jumps over the lazy dog" />
+      </div>
+
+      <div class="font-chips-row">
+        <button class="font-chip-btn active" data-cat="all" type="button">All Types</button>
+        <button class="font-chip-btn" data-cat="sans" type="button">Modern Sans</button>
+        <button class="font-chip-btn" data-cat="serif" type="button">Editorial Serif</button>
+        <button class="font-chip-btn" data-cat="cursive" type="button">Handwritten</button>
+        <button class="font-chip-btn" data-cat="mono" type="button">Code Mono</button>
+      </div>
+
+      <div id="fontGalleryContainer" class="font-gallery-grid"></div>
+
+      <label class="font-upload-banner" for="inputFontFileUpload">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span style="font-size:12.5px; font-weight:600; color:var(--text-main);">Upload Custom Font (.ttf / .otf)</span>
+        </div>
+        <span style="font-size:11px; color:var(--primary); font-weight:700;">Browse</span>
+      </label>
+      <input type="file" id="inputFontFileUpload" accept=".ttf,.otf" style="display:none;" />
+    </div>
+  </div>
+
+  <!-- Profile & Avatar Modal -->
+  <div id="modalProfile" class="modal-backdrop-wrap">
+    <div class="modal-card-box" style="max-width: 440px;">
+      <div class="modal-head">
+        <h3 class="modal-head-title">
+          <span id="modalAvatarPreview" style="font-size: 24px; margin-right: 4px;">🌻</span>
+          <span>Vault Profile</span>
+        </h3>
+        <button id="btnCloseProfile" class="modal-close-x" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Active Vault</span>
+        <div id="labelCurrentVaultId" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); background: var(--bg-card); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-subtle); word-break: break-all;">Unlocked</div>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Display Name</label>
+        <input type="text" id="inputUserName" class="search-input" placeholder="Enter your display name..." style="font-size: 13.5px; padding: 8px 10px;" />
+      </div>
+
+      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Select Your Avatar</div>
+      <div id="avatarOptionsContainer" class="avatar-picker-grid"></div>
+
+      <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+        <button id="btnLockVault" type="button" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--danger); font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 6px; cursor: pointer;">
+          Lock Vault
+        </button>
+        <button id="btnSaveProfile" class="new-note-btn" style="padding: 7px 18px; font-size: 12.5px; width:auto;" type="button">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vault Authentication Modal -->
+  <div id="modalVaultAuth" class="modal-backdrop-wrap" style="z-index: 1001;">
+    <div class="modal-card-box" style="max-width: 430px;">
+      <div class="modal-head">
+        <h3 class="modal-head-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>Private Cloud Vault</span>
+        </h3>
+      </div>
+
+      <div style="display: flex; border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px;">
+        <button id="tabUnlockVault" class="auth-tab-btn active" type="button">Unlock Vault</button>
+        <button id="tabCreateVault" class="auth-tab-btn" type="button">Create New Vault</button>
+      </div>
+
+      <div id="vaultFormError" style="display:none; color: var(--danger); font-size: 12px; font-weight: 600; margin-bottom: 10px; background: var(--danger-bg); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.3); word-break: break-word;"></div>
+
+      <!-- Unlock Section -->
+      <div id="sectionUnlockVault">
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 5px;">Vault ID</label>
+          <input type="text" id="inputUnlockVaultId" class="search-input" placeholder="Enter your private Vault ID..." style="font-size: 13.5px; padding: 8px 10px;" />
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 5px;">Vault Password</label>
+          <div class="input-password-wrap">
+            <input type="password" id="inputUnlockPassword" class="search-input has-eye-btn" placeholder="Enter vault password..." style="font-size: 13.5px; padding: 8px 10px;" />
+            <button type="button" class="eye-toggle-btn" id="btnToggleUnlockPassword" title="Show/Hide Password">
+              <svg id="eyeIconUnlock" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button id="btnSubmitUnlock" class="new-note-btn" style="width: 100%; justify-content: center; padding: 9px; font-size: 13px;" type="button">
+          Unlock My Notes
+        </button>
+      </div>
+
+      <!-- Create Section -->
+      <div id="sectionCreateVault" style="display: none;">
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Choose Unique Vault ID</label>
+          <input type="text" id="inputCreateVaultId" class="search-input" placeholder="e.g. aryan_vault_2026" style="font-size: 13px; padding: 7px 10px;" />
+        </div>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Password</label>
+          <div class="input-password-wrap">
+            <input type="password" id="inputCreatePassword" class="search-input has-eye-btn" placeholder="Secure password..." style="font-size: 13px; padding: 7px 10px;" />
+            <button type="button" class="eye-toggle-btn" id="btnToggleCreatePassword" title="Show/Hide Password">
+              <svg id="eyeIconCreate" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Your Display Name</label>
+          <input type="text" id="inputCreateDisplayName" class="search-input" placeholder="Display name..." value="Author" style="font-size: 13px; padding: 7px 10px;" />
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Select Initial Avatar</label>
+          <div id="createAvatarPickerGrid" class="avatar-picker-grid" style="margin: 6px 0;"></div>
+        </div>
+        <button id="btnSubmitCreate" class="new-note-btn" style="width: 100%; justify-content: center; padding: 9px; font-size: 13px;" type="button">
+          Create & Open Vault
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastMessage" class="toast-popup"></div>
+
+  <script>
+    /* ==========================================================================
+       BUILT-IN SUPABASE CONFIGURATION
+       Provide your Supabase Project URL and Publishable / Anon Key here.
+       The app will initialize directly from these constants on startup
+       and will not require any credential prompt across refreshes.
+       ========================================================================== */
+    const SUPABASE_URL = "https://vlnbigzakifnrwkwnbks.supabase.co"; // e.g. "https://your-project.supabase.co"
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_alXQV3IERbiDkji25x9Tqw_nJuF2d3I"; // e.g. "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    const STORAGE_KEY = 'got_notes_store_';
+    const CRED_STORAGE_URL_KEY = 'got_notes_supabase_url';
+    const CRED_STORAGE_KEY_KEY = 'got_notes_supabase_key';
+
+    function sanitizeSupabaseUrl(rawUrl) {
+      if (!rawUrl) return '';
+      let clean = rawUrl.trim();
+      if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+        clean = 'https://' + clean;
+      }
+      return clean.replace(/\/+$/, '');
+    }
+
+    function isConfigValid(url, key) {
+      if (!url || !key) return false;
+      const cleanUrl = sanitizeSupabaseUrl(url);
+      const cleanKey = (key || '').trim();
+      return cleanUrl.length >= 8 &&
+             cleanKey.length >= 8 &&
+             !cleanUrl.includes('YOUR_SUPABASE_PROJECT_URL') &&
+             !cleanKey.includes('YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY') &&
+             (cleanUrl.startsWith('https://') || cleanUrl.startsWith('http://'));
+    }
+
+    function getStoredCredentials() {
+      // 1. Check built-in constants first
+      const builtInUrl = sanitizeSupabaseUrl(SUPABASE_URL);
+      const builtInKey = (SUPABASE_PUBLISHABLE_KEY || '').trim();
+
+      if (builtInUrl && builtInKey && isConfigValid(builtInUrl, builtInKey)) {
+        return {
+          url: builtInUrl,
+          key: builtInKey,
+          isBuiltIn: true
+        };
+      }
+
+      // 2. Fallback to localStorage if constants are empty
+      const rawUrl = localStorage.getItem(CRED_STORAGE_URL_KEY) || localStorage.getItem('got_notes_custom_supabase_url') || '';
+      const rawKey = localStorage.getItem(CRED_STORAGE_KEY_KEY) || localStorage.getItem('got_notes_custom_supabase_key') || '';
+      return {
+        url: sanitizeSupabaseUrl(rawUrl),
+        key: rawKey.trim(),
+        isBuiltIn: false
+      };
+    }
+
+    function saveStoredCredentials(url, key) {
+      const cleanUrl = sanitizeSupabaseUrl(url);
+      const cleanKey = (key || '').trim();
+
+      if (cleanUrl) {
+        localStorage.setItem(CRED_STORAGE_URL_KEY, cleanUrl);
+        localStorage.setItem('got_notes_custom_supabase_url', cleanUrl);
+      }
+      if (cleanKey) {
+        localStorage.setItem(CRED_STORAGE_KEY_KEY, cleanKey);
+        localStorage.setItem('got_notes_custom_supabase_key', cleanKey);
+      }
+
+      const vUrl = localStorage.getItem(CRED_STORAGE_URL_KEY);
+      const vKey = localStorage.getItem(CRED_STORAGE_KEY_KEY);
+      console.log('[Supabase Credentials Verification]', {
+        urlStored: !!vUrl,
+        keyStored: !!vKey,
+        targetUrl: vUrl
+      });
+      return { url: vUrl, key: vKey };
+    }
+
+    let supabaseClient = null;
+    let isCloudOnline = navigator.onLine;
+
+    function initSupabaseClient(forceReinit = false) {
+      if (supabaseClient && !forceReinit) return true;
+
+      const stored = getStoredCredentials();
+
+      if (stored.url && stored.key && isConfigValid(stored.url, stored.key)) {
+        const sourceLabel = stored.isBuiltIn ? 'built-in constants' : 'localStorage';
+        console.log(`[Supabase] Supabase credentials loaded from ${sourceLabel}:`, stored.url);
+        const sbSdk = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+        if (sbSdk && sbSdk.createClient) {
+          try {
+            supabaseClient = sbSdk.createClient(stored.url, stored.key, {
+              auth: {
+                persistSession: true,
+                autoRefreshToken: false
+              }
+            });
+            console.log('[Supabase] Supabase client initialized');
+            return true;
+          } catch (e) {
+            console.error('[Supabase] Supabase client initialization error:', e);
+            supabaseClient = null;
+            return false;
+          }
+        } else {
+          console.warn('[Supabase] Supabase SDK script loading...');
+          return false;
+        }
+      } else {
+        supabaseClient = null;
+        console.warn('[Supabase] Valid Supabase credentials not found in built-in constants or localStorage. Awaiting user configuration.');
+        return false;
+      }
+    }
+
+    // Try immediate initialization on script load
+    initSupabaseClient();
+
+    async function hashString(str) {
+      const buf = new TextEncoder().encode(str);
+      const digest = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function generateUUID() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function updateCloudStatusUI(status, labelText) {
+      const dot = document.getElementById('vaultStatusDot');
+      const headerLabel = document.getElementById('vaultHeaderLabel');
+      const pill = document.getElementById('btnVaultStatus');
+      if (!dot || !headerLabel) return;
+
+      dot.className = 'vault-status-dot';
+      if (status === 'synced') {
+        dot.style.background = '#22c55e';
+        if (pill) {
+          pill.classList.remove('is-unsaved', 'is-saving');
+          pill.classList.add('is-saved');
+        }
+      } else if (status === 'syncing') {
+        dot.classList.add('syncing');
+        if (pill) {
+          pill.classList.remove('is-saved');
+          pill.classList.add('is-saving');
+        }
+      } else if (status === 'offline') {
+        dot.classList.add('offline');
+      } else if (status === 'error') {
+        dot.classList.add('error');
+      }
+
+      // Keep only clean Vault Name without appending '...' or temporary labels
+      headerLabel.textContent = activeVaultId || 'Private Vault';
+    }
+
+    window.CloudVaultAPI = {
+      isReady: () => {
+        if (!supabaseClient) initSupabaseClient();
+        return !!supabaseClient && isCloudOnline;
+      },
+      hash: hashString,
+
+      createVault: async (vaultHash, passwordHash, name, avatar) => {
+        if (!supabaseClient) initSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client not initialized. Check your credentials.');
+        if (!isCloudOnline) throw new Error('Network offline. Cannot connect to Supabase.');
+
+        const { data, error } = await supabaseClient.rpc('create_vault', {
+          p_vault_hash: vaultHash,
+          p_password_hash: passwordHash,
+          p_name: name || 'Author',
+          p_avatar: avatar || '🌻'
+        });
+
+        if (error) {
+          console.error('[Supabase RPC create_vault Error]', error);
+          throw error;
+        }
+        return data;
+      },
+
+      unlockVault: async (vaultHash, passwordHash) => {
+        if (!supabaseClient) initSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client not initialized. Check your credentials.');
+        if (!isCloudOnline) throw new Error('Network offline. Cannot connect to Supabase.');
+
+        const { data, error } = await supabaseClient.rpc('unlock_vault', {
+          p_vault_hash: vaultHash,
+          p_password_hash: passwordHash
+        });
+
+        if (error) {
+          console.error('[Supabase RPC unlock_vault Error]', error);
+          throw error;
+        }
+        return data;
+      },
+
+      loadNotes: async (vaultDbId, passwordHash) => {
+        if (!supabaseClient) initSupabaseClient();
+        if (!supabaseClient || !vaultDbId) throw new Error('Supabase client or Vault ID missing.');
+
+        const { data, error } = await supabaseClient.rpc('load_vault_notes', {
+          p_vault_id: vaultDbId,
+          p_password_hash: passwordHash
+        });
+
+        if (error) {
+          console.error('[Supabase RPC load_vault_notes Error]', error);
+          throw error;
+        }
+        return Array.isArray(data) ? data : [];
+      },
+
+      saveNote: async (note, vaultDbId, passwordHash) => {
+        if (!supabaseClient) initSupabaseClient();
+        if (!supabaseClient || !vaultDbId) throw new Error('Supabase client or Vault ID missing.');
+
+        const { data, error } = await supabaseClient.rpc('save_vault_note', {
+          p_vault_id: vaultDbId,
+          p_password_hash: passwordHash,
+          p_id: note.id,
+          p_title: note.title || 'Untitled Note',
+          p_content: note.content || '',
+          p_pinned: !!note.isPinned,
+          p_starred: !!note.isStarred,
+          p_trashed: !!note.isTrashed,
+          p_created_at: new Date(note.createdAt || note.updatedAt || Date.now()).toISOString(),
+          p_updated_at: new Date(note.updatedAt || Date.now()).toISOString()
+        });
+
+        if (error) {
+          console.error('[Supabase RPC save_vault_note Error]', error);
+          throw error;
+        }
+        return data;
+      },
+
+      deleteNote: async (noteId, vaultDbId, passwordHash) => {
+        if (!supabaseClient) initSupabaseClient();
+        if (!supabaseClient || !vaultDbId) throw new Error('Supabase client or Vault ID missing.');
+
+        const { data, error } = await supabaseClient.rpc('delete_vault_note', {
+          p_vault_id: vaultDbId,
+          p_password_hash: passwordHash,
+          p_note_id: noteId
+        });
+
+        if (error) {
+          console.error('[Supabase RPC delete_vault_note Error]', error);
+          throw error;
+        }
+        return data;
+      },
+
+      syncProfile: async (vaultDbId, passwordHash, name, avatar) => {
+        if (!supabaseClient) initSupabaseClient();
+        if (!supabaseClient || !vaultDbId) throw new Error('Supabase client or Vault ID missing.');
+
+        const { data, error } = await supabaseClient.rpc('update_vault_profile', {
+          p_vault_id: vaultDbId,
+          p_password_hash: passwordHash,
+          p_name: name,
+          p_avatar: avatar
+        });
+
+        if (error) {
+          console.error('[Supabase RPC update_vault_profile Error]', error);
+          throw error;
+        }
+        return data;
+      }
+    };
+
+    window.addEventListener('online', () => {
+      isCloudOnline = true;
+      showToast('Internet connection restored.');
+      if (activeVaultDbId && activePasswordHash) {
+        syncCurrentVaultNotes();
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      isCloudOnline = false;
+      updateCloudStatusUI('offline', 'Offline Mode');
+      showToast('⚠️ Network Offline: Changes will sync once back online.');
+    });
+
+    const MASTER_FONTS = [
+      { id: 'inter', name: 'Inter', family: "'Inter', sans-serif", category: 'sans', preview: 'Clean modern sans' },
+      { id: 'merriweather', name: 'Merriweather', family: "'Merriweather', serif", category: 'serif', preview: 'Warm editorial serif' },
+      { id: 'jetbrains', name: 'JetBrains Mono', family: "'JetBrains Mono', monospace", category: 'mono', preview: 'const note = true;' },
+      { id: 'caveat', name: 'Caveat', family: "'Caveat', cursive", category: 'cursive', preview: 'Personal handwriting' },
+      { id: 'playfair', name: 'Playfair Display', family: "'Playfair Display', serif", category: 'serif', preview: 'Luxury & elegance' },
+      { id: 'nunito', name: 'Nunito', family: "'Nunito', sans-serif", category: 'sans', preview: 'Smooth rounded font' },
+      { id: 'cinzel', name: 'Cinzel', family: "'Cinzel', serif", category: 'serif', preview: 'Classical Roman style' },
+      { id: 'dancing', name: 'Dancing Script', family: "'Dancing Script', cursive", category: 'cursive', preview: 'Expressive calligraphy' },
+      { id: 'roboto-mono', name: 'Roboto Mono', family: "'Roboto Mono', monospace", category: 'mono', preview: 'Clean monospace' }
+    ];
+
+    const AVATAR_LIST = ['🌻', '⚜️', '🪐', '⚡', '🔮', '🦊', '🌸', '🗡️', '🦅', '🌌', '🌿', '👑', '🎨', '🌙', '🌊', '☕', '✨', '🦋', '🦁', '🐉', '🍀', '🔥', '💎', '🦄'];
+
+    let activeVaultId = localStorage.getItem(STORAGE_KEY + 'active_vault_id') || null;
+    let activeVaultHash = localStorage.getItem(STORAGE_KEY + 'active_vault_hash') || null;
+    let activeVaultDbId = localStorage.getItem(STORAGE_KEY + 'active_vault_db_id') || null;
+    let activePasswordHash = localStorage.getItem(STORAGE_KEY + 'active_pwd_hash') || sessionStorage.getItem(STORAGE_KEY + 'active_pwd_hash') || null;
+    let userName = localStorage.getItem(STORAGE_KEY + 'username') || 'Author';
+    let userAvatar = localStorage.getItem(STORAGE_KEY + 'avatar') || '🌻';
+
+    let notes = [];
+    let currentNoteId = localStorage.getItem(STORAGE_KEY + 'current_id') || null;
+    let activeHighlightColor = null;
+    let selectedFont = "'Inter', sans-serif";
+    let activeFontCategory = 'all';
+    let cachedSelectionRange = null;
+    let isViewingTrash = false;
+    let autoSaveTimer = null;
+    let currentSaveState = 'saved';
+
+    function formatSupabaseError(err) {
+      if (!err) return 'Unknown error occurred.';
+      const msg = err.message || (typeof err === 'string' ? err : '');
+      if (err.code === '42501' || msg.toLowerCase().includes('permission denied')) {
+        return `⚠️ Database Permission Error (42501): PostgreSQL rejected access. Details: ${msg}`;
+      }
+      return msg || 'Database error occurred. Please check your Supabase connection.';
+    }
+
+    const sidebarPanel = document.getElementById('sidebarPanel');
+    const notesListContainer = document.getElementById('notesListContainer');
+    const noteTitleInput = document.getElementById('noteTitleInput');
+    const noteBodyArea = document.getElementById('noteBodyArea');
+    const inputSearchNotes = document.getElementById('inputSearchNotes');
+    const counterStatsLabel = document.getElementById('counterStatsLabel');
+    const labelFooterFontName = document.getElementById('labelFooterFontName');
+    const activeFontLabel = document.getElementById('activeFontLabel');
+    const btnHlOff = document.getElementById('btnHlOff');
+    const modalFontStudio = document.getElementById('modalFontStudio');
+    const fontGalleryContainer = document.getElementById('fontGalleryContainer');
+    const fontTesterInput = document.getElementById('fontTesterInput');
+    const toastMessage = document.getElementById('toastMessage');
+
+    const headerAvatarIcon = document.getElementById('headerAvatarIcon');
+    const modalProfile = document.getElementById('modalProfile');
+    const modalAvatarPreview = document.getElementById('modalAvatarPreview');
+    const inputUserName = document.getElementById('inputUserName');
+    const avatarOptionsContainer = document.getElementById('avatarOptionsContainer');
+    const labelCurrentVaultId = document.getElementById('labelCurrentVaultId');
+    const vaultHeaderLabel = document.getElementById('vaultHeaderLabel');
+
+    const modalVaultAuth = document.getElementById('modalVaultAuth');
+    const tabUnlockVault = document.getElementById('tabUnlockVault');
+    const tabCreateVault = document.getElementById('tabCreateVault');
+    const sectionUnlockVault = document.getElementById('sectionUnlockVault');
+    const sectionCreateVault = document.getElementById('sectionCreateVault');
+    const vaultFormError = document.getElementById('vaultFormError');
+    const createAvatarPickerGrid = document.getElementById('createAvatarPickerGrid');
+
+    const tabNotesActive = document.getElementById('tabNotesActive');
+    const tabNotesTrash = document.getElementById('tabNotesTrash');
+    const badgeActiveCount = document.getElementById('badgeActiveCount');
+    const badgeTrashCount = document.getElementById('badgeTrashCount');
+    const btnEmptyTrash = document.getElementById('btnEmptyTrash');
+    const trashWarningBanner = document.getElementById('trashWarningBanner');
+    const btnRestoreFromBanner = document.getElementById('btnRestoreFromBanner');
+
+    const btnVaultStatus = document.getElementById('btnVaultStatus');
+    const vaultStatusDot = document.getElementById('vaultStatusDot');
+
+    let createSelectedAvatar = '🌻';
+
+    function setSaveBadgeStatus(status) {
+      currentSaveState = status;
+      if (!btnVaultStatus || !vaultStatusDot) return;
+
+      btnVaultStatus.classList.remove('is-saved', 'is-unsaved', 'is-saving');
+
+      // Ensure the name stays completely clean without any dots (...)
+      if (vaultHeaderLabel) {
+        vaultHeaderLabel.textContent = activeVaultId || 'Private Vault';
+      }
+
+      if (status === 'unsaved') {
+        btnVaultStatus.classList.add('is-unsaved');
+        btnVaultStatus.title = 'Click name to Save note (Ctrl+S)';
+      } else if (status === 'saving') {
+        btnVaultStatus.classList.add('is-saving');
+        btnVaultStatus.title = 'Saving note...';
+      } else if (status === 'saved') {
+        btnVaultStatus.classList.add('is-saved');
+        btnVaultStatus.title = 'Saved ✓ Click name to Save again (Ctrl+S)';
+      }
+    }
+
+    function markNoteNeedsSave() {
+      const note = notes.find(n => n.id === currentNoteId);
+      if (!note || note.isTrashed) return;
+
+      setSaveBadgeStatus('unsaved');
+
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(() => {
+        performSaveCurrentNote(false);
+      }, 1500);
+    }
+
+    async function performSaveCurrentNote(showToastMessage = false) {
+      clearTimeout(autoSaveTimer);
+      const note = notes.find(n => n.id === currentNoteId);
+      if (!note || note.isTrashed) return;
+
+      setSaveBadgeStatus('saving');
+
+      note.content = noteBodyArea.innerHTML;
+      note.title = (noteTitleInput.value || '').trim() || 'Untitled Note';
+      note.updatedAt = Date.now();
+
+      if (activeVaultDbId) {
+        localStorage.setItem(STORAGE_KEY + 'vnotes_' + activeVaultDbId, JSON.stringify(notes));
+      }
+
+      updateStats();
+      renderSidebarTitles();
+
+      if (activeVaultDbId && activePasswordHash && window.CloudVaultAPI && window.CloudVaultAPI.isReady()) {
+        try {
+          updateCloudStatusUI('syncing');
+          await window.CloudVaultAPI.saveNote(note, activeVaultDbId, activePasswordHash);
+          updateCloudStatusUI('synced');
+          setSaveBadgeStatus('saved');
+          if (showToastMessage) showToast('Note saved to cloud ✓');
+        } catch (err) {
+          console.error('[Cloud Save Error]', err);
+          updateCloudStatusUI('error', 'Save Failed');
+          setSaveBadgeStatus('unsaved');
+          showToast(formatSupabaseError(err));
+        }
+      } else {
+        setSaveBadgeStatus('saved');
+        if (showToastMessage) showToast('Note saved locally ✓');
+      }
+    }
+
+    // Vault Name in header acts as the Save Button
+    if (btnVaultStatus) {
+      btnVaultStatus.onclick = (e) => {
+        e.preventDefault();
+        performSaveCurrentNote(true);
+      };
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        performSaveCurrentNote(true);
+      }
+    });
+
+    function setupPasswordToggle(inputEl, btnEl, eyeSvgEl) {
+      if (!inputEl || !btnEl || !eyeSvgEl) return;
+      btnEl.onclick = (e) => {
+        e.preventDefault();
+        const isCurrentlyPassword = inputEl.type === 'password';
+        inputEl.type = isCurrentlyPassword ? 'text' : 'password';
+
+        if (isCurrentlyPassword) {
+          eyeSvgEl.innerHTML = `
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          `;
+        } else {
+          eyeSvgEl.innerHTML = `
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          `;
+        }
+      };
+    }
+
+    setupPasswordToggle(
+      document.getElementById('inputUnlockPassword'),
+      document.getElementById('btnToggleUnlockPassword'),
+      document.getElementById('eyeIconUnlock')
+    );
+    setupPasswordToggle(
+      document.getElementById('inputCreatePassword'),
+      document.getElementById('btnToggleCreatePassword'),
+      document.getElementById('eyeIconCreate')
+    );
+
+    function syncAvatarUI() {
+      if (headerAvatarIcon) headerAvatarIcon.textContent = userAvatar || '🌻';
+      if (modalAvatarPreview) modalAvatarPreview.textContent = userAvatar || '🌻';
+      if (labelCurrentVaultId) labelCurrentVaultId.textContent = activeVaultId || 'Unlocked';
+      if (inputUserName) inputUserName.value = userName || 'Author';
+      if (vaultHeaderLabel && activeVaultId) vaultHeaderLabel.textContent = activeVaultId;
+    }
+
+    function renderAvatarPicker(container, selectedVal, onSelect) {
+      if (!container) return;
+      container.innerHTML = '';
+      AVATAR_LIST.forEach(av => {
+        const item = document.createElement('div');
+        item.className = 'avatar-choice-item' + (av === selectedVal ? ' selected' : '');
+        item.textContent = av;
+        item.onclick = (e) => {
+          e.stopPropagation();
+          container.querySelectorAll('.avatar-choice-item').forEach(el => el.classList.remove('selected'));
+          item.classList.add('selected');
+          if (onSelect) onSelect(av);
+        };
+        container.appendChild(item);
+      });
+    }
+
+    document.getElementById('btnOpenProfile').onclick = () => {
+      syncAvatarUI();
+      renderAvatarPicker(avatarOptionsContainer, userAvatar, (sel) => {
+        userAvatar = sel;
+        if (modalAvatarPreview) modalAvatarPreview.textContent = sel;
+        if (headerAvatarIcon) headerAvatarIcon.textContent = sel;
+      });
+      modalProfile.style.display = 'flex';
+    };
+
+    document.getElementById('btnCloseProfile').onclick = () => {
+      modalProfile.style.display = 'none';
+    };
+
+    document.getElementById('btnSaveProfile').onclick = async () => {
+      userName = inputUserName.value.trim() || 'Author';
+      localStorage.setItem(STORAGE_KEY + 'username', userName);
+      localStorage.setItem(STORAGE_KEY + 'avatar', userAvatar);
+      syncAvatarUI();
+
+      if (activeVaultDbId && activePasswordHash && window.CloudVaultAPI && window.CloudVaultAPI.isReady()) {
+        try {
+          updateCloudStatusUI('syncing');
+          await window.CloudVaultAPI.syncProfile(activeVaultDbId, activePasswordHash, userName, userAvatar);
+          updateCloudStatusUI('synced', activeVaultId || 'Cloud Synced');
+          showToast('Profile updated and synced to cloud!');
+        } catch (e) {
+          console.error('[Profile Sync Error]', e);
+          showToast(formatSupabaseError(e));
+        }
+      } else {
+        showToast('Profile saved locally');
+      }
+      modalProfile.style.display = 'none';
+    };
+
+    document.getElementById('btnLockVault').onclick = () => {
+      modalProfile.style.display = 'none';
+      activeVaultId = null;
+      activeVaultHash = null;
+      activeVaultDbId = null;
+      activePasswordHash = null;
+      notes = [];
+      localStorage.removeItem(STORAGE_KEY + 'active_vault_id');
+      localStorage.removeItem(STORAGE_KEY + 'active_vault_hash');
+      localStorage.removeItem(STORAGE_KEY + 'active_vault_db_id');
+      localStorage.removeItem(STORAGE_KEY + 'active_pwd_hash');
+      sessionStorage.removeItem(STORAGE_KEY + 'active_pwd_hash');
+      updateCloudStatusUI('offline', 'Vault Locked');
+      showVaultModal();
+    };
+
+    function showVaultModal() {
+      modalVaultAuth.style.display = 'flex';
+      vaultFormError.style.display = 'none';
+      tabUnlockVault.click();
+      renderAvatarPicker(createAvatarPickerGrid, createSelectedAvatar, (sel) => {
+        createSelectedAvatar = sel;
+      });
+
+      const stored = getStoredCredentials();
+      const hasValid = isConfigValid(stored.url, stored.key);
+
+      if (!hasValid) {
+        showVaultError('Supabase configuration missing or invalid.');
+      } else {
+        vaultFormError.style.display = 'none';
+      }
+    }
+
+    tabUnlockVault.onclick = () => {
+      tabUnlockVault.classList.add('active');
+      tabCreateVault.classList.remove('active');
+      sectionUnlockVault.style.display = 'block';
+      sectionCreateVault.style.display = 'none';
+      vaultFormError.style.display = 'none';
+    };
+
+    tabCreateVault.onclick = () => {
+      tabCreateVault.classList.add('active');
+      tabUnlockVault.classList.remove('active');
+      sectionUnlockVault.style.display = 'none';
+      sectionCreateVault.style.display = 'block';
+      vaultFormError.style.display = 'none';
+      renderAvatarPicker(createAvatarPickerGrid, createSelectedAvatar, (sel) => {
+        createSelectedAvatar = sel;
+      });
+    };
+
+    function showVaultError(msg) {
+      vaultFormError.textContent = msg;
+      vaultFormError.style.display = 'block';
+    }
+
+    function ensureSupabaseConfigured() {
+      if (!supabaseClient) {
+        initSupabaseClient(true);
+      }
+      if (!supabaseClient) {
+        showVaultError('Supabase connection could not be established.');
+        return false;
+      }
+      return true;
+    }
+
+    document.getElementById('btnSubmitUnlock').onclick = async () => {
+      if (!ensureSupabaseConfigured()) return;
+
+      const vId = document.getElementById('inputUnlockVaultId').value.trim();
+      const pwd = document.getElementById('inputUnlockPassword').value;
+
+      if (!vId || !pwd) {
+        showVaultError('Please provide both a Vault ID and Password.');
+        return;
+      }
+
+      const vaultKey = await window.CloudVaultAPI.hash(vId.toLowerCase());
+      const passwordHash = await window.CloudVaultAPI.hash(pwd);
+
+      try {
+        updateCloudStatusUI('syncing');
+        const record = await window.CloudVaultAPI.unlockVault(vaultKey, passwordHash);
+
+        if (!record || !record.id) {
+          showVaultError('Vault not found. Please check your Vault ID.');
+          updateCloudStatusUI('error', 'Vault Not Found');
+          return;
+        }
+
+        activeVaultId = vId;
+        activeVaultHash = vaultKey;
+        activeVaultDbId = record.id;
+        activePasswordHash = passwordHash;
+        localStorage.setItem(STORAGE_KEY + 'active_vault_id', vId);
+        localStorage.setItem(STORAGE_KEY + 'active_vault_hash', vaultKey);
+        localStorage.setItem(STORAGE_KEY + 'active_vault_db_id', record.id);
+        localStorage.setItem(STORAGE_KEY + 'active_pwd_hash', passwordHash);
+        sessionStorage.setItem(STORAGE_KEY + 'active_pwd_hash', passwordHash);
+
+        if (record.name) {
+          userName = record.name;
+          localStorage.setItem(STORAGE_KEY + 'username', userName);
+        }
+        if (record.avatar) {
+          userAvatar = record.avatar;
+          localStorage.setItem(STORAGE_KEY + 'avatar', userAvatar);
+        }
+
+        syncAvatarUI();
+        modalVaultAuth.style.display = 'none';
+        updateCloudStatusUI('synced', activeVaultId);
+        showToast(`Vault Unlocked: Welcome ${userAvatar} ${userName}`);
+
+        await syncCurrentVaultNotes();
+      } catch (err) {
+        console.error('[Vault Unlock Error]', err);
+        showVaultError(formatSupabaseError(err));
+        updateCloudStatusUI('error', 'Connection Error');
+      }
+    };
+
+    document.getElementById('btnSubmitCreate').onclick = async () => {
+      if (!ensureSupabaseConfigured()) return;
+
+      const vId = document.getElementById('inputCreateVaultId').value.trim();
+      const pwd = document.getElementById('inputCreatePassword').value;
+      const dName = document.getElementById('inputCreateDisplayName').value.trim() || 'Author';
+
+      if (!vId || !pwd) {
+        showVaultError('Please provide both a Vault ID and Password.');
+        return;
+      }
+
+      const vaultKey = await window.CloudVaultAPI.hash(vId.toLowerCase());
+      const passwordHash = await window.CloudVaultAPI.hash(pwd);
+
+      try {
+        updateCloudStatusUI('syncing');
+
+        const newVaultRecord = await window.CloudVaultAPI.createVault(
+          vaultKey,
+          passwordHash,
+          dName,
+          createSelectedAvatar || '🌻'
+        );
+
+        if (!newVaultRecord || !newVaultRecord.id) {
+          throw new Error('Database did not return created vault record.');
+        }
+
+        activeVaultId = vId;
+        activeVaultHash = vaultKey;
+        activeVaultDbId = newVaultRecord.id;
+        activePasswordHash = passwordHash;
+        userName = dName;
+        userAvatar = createSelectedAvatar || '🌻';
+
+        localStorage.setItem(STORAGE_KEY + 'active_vault_id', vId);
+        localStorage.setItem(STORAGE_KEY + 'active_vault_hash', vaultKey);
+        localStorage.setItem(STORAGE_KEY + 'active_vault_db_id', newVaultRecord.id);
+        localStorage.setItem(STORAGE_KEY + 'active_pwd_hash', passwordHash);
+        localStorage.setItem(STORAGE_KEY + 'username', userName);
+        localStorage.setItem(STORAGE_KEY + 'avatar', userAvatar);
+        sessionStorage.setItem(STORAGE_KEY + 'active_pwd_hash', passwordHash);
+
+        notes = [];
+        createNewNote(true);
+
+        syncAvatarUI();
+        modalVaultAuth.style.display = 'none';
+        updateCloudStatusUI('synced', activeVaultId);
+        showToast(`Vault Created: Welcome ${userAvatar} ${userName}!`);
+      } catch (err) {
+        console.error('[Create Vault Error]', err);
+        if (err.message && err.message.includes('already in use')) {
+          showVaultError('This ID is already in use. Please choose another ID.');
+        } else {
+          showVaultError(formatSupabaseError(err));
+        }
+        updateCloudStatusUI('error', 'Vault Create Failed');
+      }
+    };
+
+    async function syncCurrentVaultNotes() {
+      if (!activeVaultDbId || !window.CloudVaultAPI) return;
+      try {
+        updateCloudStatusUI('syncing');
+        const cloudNotes = await window.CloudVaultAPI.loadNotes(activeVaultDbId, activePasswordHash);
+
+        if (cloudNotes && cloudNotes.length > 0) {
+          notes = cloudNotes.map(n => ({
+            id: n.id,
+            title: n.title || 'Untitled Note',
+            content: n.content || '',
+            isPinned: !!n.pinned,
+            isStarred: !!n.starred,
+            isTrashed: !!n.trashed,
+            createdAt: n.created_at ? new Date(n.created_at).getTime() : Date.now(),
+            updatedAt: n.updated_at ? new Date(n.updated_at).getTime() : Date.now(),
+            isAutoTitle: false
+          }));
+        } else {
+          notes = [];
+          createNewNote(false);
+        }
+
+        localStorage.setItem(STORAGE_KEY + 'vnotes_' + activeVaultDbId, JSON.stringify(notes));
+        updateCloudStatusUI('synced', activeVaultId || 'Cloud Synced');
+        initApp();
+      } catch (err) {
+        console.error('[Load Notes Error]', err);
+        updateCloudStatusUI('error', 'Cloud Load Failed');
+        showToast(formatSupabaseError(err));
+        const localCached = localStorage.getItem(STORAGE_KEY + 'vnotes_' + activeVaultDbId);
+        if (localCached) {
+          try {
+            notes = JSON.parse(localCached);
+            initApp();
+          } catch(e) {}
+        }
+      }
+    }
+
+    function restoreSelection() {
+      if (cachedSelectionRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(cachedSelectionRange);
+      }
+    }
+
+    noteBodyArea.addEventListener('mouseup', () => {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        cachedSelectionRange = sel.getRangeAt(0).cloneRange();
+      }
+    });
+
+    noteBodyArea.addEventListener('keyup', () => {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        cachedSelectionRange = sel.getRangeAt(0).cloneRange();
+      }
+    });
+
+    noteBodyArea.oninput = () => {
+      const text = noteBodyArea.innerText.trim();
+      const firstLine = text.split('\n')[0];
+      const note = notes.find(n => n.id === currentNoteId);
+      if (note && firstLine && (note.title === 'Untitled Note' || note.isAutoTitle)) {
+        note.title = firstLine.substring(0, 40);
+        note.isAutoTitle = true;
+        noteTitleInput.value = note.title;
+        renderSidebarTitles();
+      }
+      updateStats();
+      markNoteNeedsSave();
+    };
+
+    noteTitleInput.oninput = () => {
+      const note = notes.find(n => n.id === currentNoteId);
+      if (!note) return;
+      note.title = noteTitleInput.value.trim() || 'Untitled Note';
+      note.isAutoTitle = false;
+      renderSidebarTitles();
+      markNoteNeedsSave();
+    };
+
+    function formatText(cmd) {
+      restoreSelection();
+      document.execCommand(cmd, false, null);
+      updateFormatButtonsState();
+      markNoteNeedsSave();
+    }
+
+    function updateFormatButtonsState() {
+      try {
+        document.getElementById('btnFormatBold').classList.toggle('is-active', document.queryCommandState('bold'));
+        document.getElementById('btnFormatItalic').classList.toggle('is-active', document.queryCommandState('italic'));
+        document.getElementById('btnFormatUnderline').classList.toggle('is-active', document.queryCommandState('underline'));
+      } catch (e) {}
+    }
+
+    document.getElementById('btnFormatBold').onclick = () => formatText('bold');
+    document.getElementById('btnFormatItalic').onclick = () => formatText('italic');
+    document.getElementById('btnFormatUnderline').onclick = () => formatText('underline');
+
+    document.getElementById('btnFormatBullets').onclick = () => {
+      restoreSelection();
+      document.execCommand('insertUnorderedList', false, null);
+      markNoteNeedsSave();
+    };
+
+    document.getElementById('btnFormatNumbers').onclick = () => {
+      restoreSelection();
+      document.execCommand('insertOrderedList', false, null);
+      markNoteNeedsSave();
+    };
+
+    document.getElementById('btnInsertChecklist').onclick = () => {
+      restoreSelection();
+      const row = document.createElement('div');
+      row.className = 'todo-row-item';
+      row.innerHTML = `
+        <div class="todo-checkbox-box" contenteditable="false">
+          <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="todo-text-span" contenteditable="true">To-do item...</div>
+      `;
+      noteBodyArea.appendChild(row);
+      const span = row.querySelector('.todo-text-span');
+      span.focus();
+      bindChecklistEvents();
+      markNoteNeedsSave();
+    };
+
+    function bindChecklistEvents() {
+      noteBodyArea.querySelectorAll('.todo-checkbox-box').forEach(box => {
+        box.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const row = box.closest('.todo-row-item');
+          if (row) {
+            row.classList.toggle('is-done');
+            markNoteNeedsSave();
+          }
+        };
+      });
+
+      noteBodyArea.querySelectorAll('.todo-text-span').forEach(span => {
+        span.onkeydown = (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const row = span.closest('.todo-row-item');
+            if (!row) return;
+
+            if (!span.textContent.trim()) {
+              const p = document.createElement('div');
+              p.innerHTML = '<br>';
+              row.after(p);
+              row.remove();
+              markNoteNeedsSave();
+              return;
+            }
+
+            const nextRow = document.createElement('div');
+            nextRow.className = 'todo-row-item';
+            nextRow.innerHTML = `
+              <div class="todo-checkbox-box" contenteditable="false">
+                <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="todo-text-span" contenteditable="true"></div>
+            `;
+            row.after(nextRow);
+            bindChecklistEvents();
+            nextRow.querySelector('.todo-text-span').focus();
+            markNoteNeedsSave();
+          }
+        };
+      });
+    }
+
+    function applyHighlight(colorName) {
+      restoreSelection();
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+
+      if (!sel.isCollapsed) {
+        activeHighlightColor = colorName;
+        updateHighlightUI();
+
+        const frag = range.extractContents();
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(frag);
+
+        wrapper.querySelectorAll('mark.note-hl').forEach(el => {
+          el.replaceWith(...el.childNodes);
+        });
+
+        const mark = document.createElement('mark');
+        mark.className = `note-hl hl-${colorName}`;
+        mark.appendChild(wrapper);
+
+        range.insertNode(mark);
+
+        const newRange = document.createRange();
+        newRange.selectNodeContents(mark);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        cachedSelectionRange = newRange.cloneRange();
+        markNoteNeedsSave();
+        return;
+      }
+
+      activeHighlightColor = colorName;
+      updateHighlightUI();
+
+      let node = range.startContainer;
+      let currentMark = node.nodeType === 3 ? node.parentElement.closest('mark.note-hl') : (node.closest ? node.closest('mark.note-hl') : null);
+
+      let insertRange = range;
+      if (currentMark) {
+        const afterRange = document.createRange();
+        afterRange.setStartAfter(currentMark);
+        afterRange.collapse(true);
+        insertRange = afterRange;
+      }
+
+      const mark = document.createElement('mark');
+      mark.className = `note-hl hl-${colorName}`;
+      const zeroWidth = document.createTextNode('\u200B');
+      mark.appendChild(zeroWidth);
+
+      insertRange.insertNode(mark);
+
+      const cursorRange = document.createRange();
+      cursorRange.setStart(zeroWidth, 1);
+      cursorRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(cursorRange);
+      cachedSelectionRange = cursorRange.cloneRange();
+      showToast(`${colorName.toUpperCase()} Highlight active`);
+    }
+
+    function setHighlightOff() {
+      activeHighlightColor = null;
+      updateHighlightUI();
+
+      restoreSelection();
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+
+      if (!sel.isCollapsed) {
+        const frag = range.extractContents();
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(frag);
+        wrapper.querySelectorAll('mark.note-hl').forEach(el => {
+          el.replaceWith(...el.childNodes);
+        });
+        range.insertNode(wrapper);
+        wrapper.replaceWith(...wrapper.childNodes);
+        markNoteNeedsSave();
+        showToast('Highlight removed from selection');
+        return;
+      }
+
+      let node = range.startContainer;
+      let currentMark = node.nodeType === 3 ? node.parentElement.closest('mark.note-hl') : (node.closest ? node.closest('mark.note-hl') : null);
+
+      if (currentMark) {
+        const neutralText = document.createTextNode('\u200B');
+        if (currentMark.nextSibling) {
+          currentMark.parentNode.insertBefore(neutralText, currentMark.nextSibling);
+        } else {
+          currentMark.parentNode.appendChild(neutralText);
+        }
+        const exitRange = document.createRange();
+        exitRange.setStart(neutralText, 1);
+        exitRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(exitRange);
+        cachedSelectionRange = exitRange.cloneRange();
+      }
+      showToast('Highlighter OFF: typing normal text');
+    }
+
+    function updateHighlightUI() {
+      document.querySelectorAll('.hl-dot').forEach(dot => dot.classList.remove('active-sticky'));
+      if (activeHighlightColor) {
+        btnHlOff.classList.remove('active-off');
+        const activeDot = document.getElementById('dotHl' + activeHighlightColor.charAt(0).toUpperCase() + activeHighlightColor.slice(1));
+        if (activeDot) activeDot.classList.add('active-sticky');
+      } else {
+        btnHlOff.classList.add('active-off');
+      }
+    }
+
+    document.getElementById('dotHlYellow').onclick = () => applyHighlight('yellow');
+    document.getElementById('dotHlGreen').onclick  = () => applyHighlight('green');
+    document.getElementById('dotHlBlue').onclick   = () => applyHighlight('blue');
+    document.getElementById('dotHlRed').onclick    = () => applyHighlight('red');
+    document.getElementById('dotHlPurple').onclick = () => applyHighlight('purple');
+    btnHlOff.onclick = setHighlightOff;
+
+    function renderFontGallery() {
+      fontGalleryContainer.innerHTML = '';
+      const sampleText = fontTesterInput.value.trim() || 'The quick brown fox jumps over the lazy dog';
+      let list = (activeFontCategory === 'all') ? MASTER_FONTS : MASTER_FONTS.filter(f => f.category === activeFontCategory);
+
+      list.forEach(item => {
+        const isCurrent = selectedFont === item.family;
+        const card = document.createElement('div');
+        card.className = 'font-showcase-card' + (isCurrent ? ' is-active' : '');
+        card.innerHTML = `
+          <div class="font-card-top">
+            <span class="font-card-title">${item.name}</span>
+            <span class="font-type-pill">${item.category}</span>
+          </div>
+          <div class="font-sample-view" style="font-family:${item.family};">${escapeHtml(sampleText)}</div>
+          <div class="font-card-bot">
+            <span style="font-size:11px; color:var(--text-muted); font-family:${item.family};">${item.preview}</span>
+            <button class="font-apply-btn" type="button">${isCurrent ? 'Active' : 'Apply'}</button>
+          </div>
+        `;
+
+        card.onclick = () => applyFontToEditor(item);
+        fontGalleryContainer.appendChild(card);
+      });
+    }
+
+    function applyFontToEditor(item) {
+      selectedFont = item.family;
+      activeFontLabel.textContent = item.name;
+      labelFooterFontName.textContent = 'Font: ' + item.name;
+
+      restoreSelection();
+      const sel = window.getSelection();
+
+      if (!sel || sel.rangeCount === 0) {
+        noteBodyArea.focus();
+      }
+
+      const activeSel = window.getSelection();
+      if (activeSel && activeSel.rangeCount > 0) {
+        const range = activeSel.getRangeAt(0);
+
+        if (!activeSel.isCollapsed) {
+          const frag = range.extractContents();
+          const span = document.createElement('span');
+          span.style.fontFamily = item.family;
+          span.appendChild(frag);
+          range.insertNode(span);
+
+          const newRange = document.createRange();
+          newRange.selectNodeContents(span);
+          activeSel.removeAllRanges();
+          activeSel.addRange(newRange);
+          cachedSelectionRange = newRange.cloneRange();
+          showToast(`Applied ${item.name} to selection`);
+        } else {
+          const span = document.createElement('span');
+          span.style.fontFamily = item.family;
+          const zeroWidth = document.createTextNode('\u200B');
+          span.appendChild(zeroWidth);
+
+          range.insertNode(span);
+
+          const cursorRange = document.createRange();
+          cursorRange.setStart(zeroWidth, 1);
+          cursorRange.collapse(true);
+          activeSel.removeAllRanges();
+          activeSel.addRange(cursorRange);
+          cachedSelectionRange = cursorRange.cloneRange();
+          showToast(`Now typing in ${item.name}`);
+        }
+      }
+
+      markNoteNeedsSave();
+      modalFontStudio.style.display = 'none';
+      renderFontGallery();
+    }
+
+    document.getElementById('btnOpenFontStudio').onclick = () => {
+      renderFontGallery();
+      modalFontStudio.style.display = 'flex';
+    };
+
+    document.getElementById('btnCloseFontStudio').onclick = () => {
+      modalFontStudio.style.display = 'none';
+    };
+
+    fontTesterInput.oninput = renderFontGallery;
+
+    document.querySelectorAll('.font-chip-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.font-chip-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFontCategory = btn.dataset.cat;
+        renderFontGallery();
+      };
+    });
+
+    document.getElementById('inputFontFileUpload').onchange = function() {
+      const file = this.files && this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const fontName = 'Custom_' + Date.now();
+          const face = new FontFace(fontName, e.target.result);
+          face.load().then(loaded => {
+            document.fonts.add(loaded);
+            const customFont = { id: 'cust', name: file.name.split('.')[0], family: `'${fontName}', sans-serif`, category: 'custom', preview: 'Uploaded Font' };
+            MASTER_FONTS.unshift(customFont);
+            applyFontToEditor(customFont);
+          });
+        } catch (err) {}
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    function initApp() {
+      const activeNotes = notes.filter(n => !n.isTrashed);
+      const trashedNotes = notes.filter(n => n.isTrashed);
+
+      if (isViewingTrash) {
+        if (trashedNotes.length > 0) {
+          loadNote(trashedNotes[0].id);
+        } else {
+          currentNoteId = null;
+          noteTitleInput.value = '';
+          noteBodyArea.innerHTML = '';
+        }
+      } else {
+        if (activeNotes.length === 0) {
+          createNewNote(false);
+        } else {
+          if (!currentNoteId || !activeNotes.find(n => n.id === currentNoteId)) {
+            currentNoteId = activeNotes[0].id;
+          }
+          loadNote(currentNoteId);
+        }
+      }
+      renderSidebarTitles();
+    }
+
+    function createNewNote(syncImmediately = false) {
+      if (isViewingTrash) {
+        tabNotesActive.click();
+      }
+
+      const newNote = {
+        id: generateUUID(),
+        title: 'Untitled Note',
+        content: '',
+        isAutoTitle: true,
+        isPinned: false,
+        isStarred: false,
+        isTrashed: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      notes.unshift(newNote);
+      currentNoteId = newNote.id;
+
+      if (activeVaultDbId) {
+        localStorage.setItem(STORAGE_KEY + 'vnotes_' + activeVaultDbId, JSON.stringify(notes));
+      }
+
+      loadNote(newNote.id);
+      renderSidebarTitles();
+
+      if (syncImmediately) {
+        performSaveCurrentNote(false);
+      } else {
+        setSaveBadgeStatus('saved');
+      }
+
+      noteBodyArea.focus();
+    }
+
+    function loadNote(id) {
+      currentNoteId = id;
+      localStorage.setItem(STORAGE_KEY + 'current_id', id);
+      const note = notes.find(n => n.id === id);
+      if (!note) return;
+
+      noteTitleInput.value = note.title || 'Untitled Note';
+      noteBodyArea.innerHTML = note.content || '';
+      bindChecklistEvents();
+      updateStats();
+
+      if (note.isTrashed) {
+        trashWarningBanner.style.display = 'flex';
+        noteBodyArea.setAttribute('contenteditable', 'false');
+        noteTitleInput.setAttribute('disabled', 'true');
+      } else {
+        trashWarningBanner.style.display = 'none';
+        noteBodyArea.setAttribute('contenteditable', 'true');
+        noteTitleInput.removeAttribute('disabled');
+        setSaveBadgeStatus('saved');
+      }
+
+      renderSidebarTitles();
+
+      document.getElementById('btnPinCurrentNote').classList.toggle('is-active', !!note.isPinned);
+      document.getElementById('btnStarCurrentNote').classList.toggle('is-active', !!note.isStarred);
+    }
+
+    tabNotesActive.onclick = () => {
+      isViewingTrash = false;
+      tabNotesActive.classList.add('active');
+      tabNotesTrash.classList.remove('active', 'trash-active');
+      document.getElementById('btnNewNote').style.display = 'flex';
+      btnEmptyTrash.style.display = 'none';
+
+      const activeNotes = notes.filter(n => !n.isTrashed);
+      if (activeNotes.length > 0) {
+        loadNote(activeNotes[0].id);
+      } else {
+        createNewNote(false);
+      }
+      renderSidebarTitles();
+    };
+
+    tabNotesTrash.onclick = () => {
+      isViewingTrash = true;
+      tabNotesTrash.classList.add('active', 'trash-active');
+      tabNotesActive.classList.remove('active');
+      document.getElementById('btnNewNote').style.display = 'none';
+      btnEmptyTrash.style.display = 'flex';
+
+      const trashedNotes = notes.filter(n => n.isTrashed);
+      if (trashedNotes.length > 0) {
+        loadNote(trashedNotes[0].id);
+      } else {
+        currentNoteId = null;
+        noteTitleInput.value = '';
+        noteBodyArea.innerHTML = '';
+        trashWarningBanner.style.display = 'none';
+      }
+      renderSidebarTitles();
+    };
+
+    btnEmptyTrash.onclick = async () => {
+      const trashed = notes.filter(n => n.isTrashed);
+      if (trashed.length === 0) {
+        showToast('Trash is already empty');
+        return;
+      }
+      notes = notes.filter(n => !n.isTrashed);
+      if (activeVaultDbId) {
+        localStorage.setItem(STORAGE_KEY + 'vnotes_' + activeVaultDbId, JSON.stringify(notes));
+      }
+      showToast('Trash bin emptied');
+      tabNotesActive.click();
+    };
+
+    btnRestoreFromBanner.onclick = () => {
+      if (currentNoteId) {
+        restoreNoteFromTrash(currentNoteId);
+      }
+    };
+
+    function renderSidebarTitles() {
+      notesListContainer.innerHTML = '';
+      const query = inputSearchNotes.value.toLowerCase().trim();
+
+      const activeCount = notes.filter(n => !n.isTrashed).length;
+      const trashCount = notes.filter(n => n.isTrashed).length;
+      if (badgeActiveCount) badgeActiveCount.textContent = activeCount;
+      if (badgeTrashCount) badgeTrashCount.textContent = trashCount;
+
+      let displayNotes = notes.filter(n => (isViewingTrash ? n.isTrashed : !n.isTrashed) && (n.title || 'Untitled Note').toLowerCase().includes(query));
+      displayNotes.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || b.updatedAt - a.updatedAt);
+
+      if (displayNotes.length === 0) {
+        notesListContainer.innerHTML = `
+          <div style="text-align:center; padding:28px 10px; color:var(--text-muted); font-size:12px;">
+            <div style="font-size:24px; margin-bottom:6px;">${isViewingTrash ? '🗑️' : '📝'}</div>
+            <div>${isViewingTrash ? 'Trash is empty' : 'No notes found'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      displayNotes.forEach(note => {
+        const item = document.createElement('div');
+        const isActive = note.id === currentNoteId;
+        item.className = 'note-card-item' + (isActive ? ' active' : '') + (note.isTrashed ? ' in-trash' : '');
+
+        const displayTitle = (note.title && note.title.trim()) ? note.title.trim() : 'Untitled Note';
+
+        item.innerHTML = `
+          <div class="note-title-text" title="${escapeHtml(displayTitle)}">${escapeHtml(displayTitle)}</div>
+          <div class="note-badges-wrap">
+            ${!note.isTrashed && note.isPinned ? '<span class="badge-icon is-pinned" title="Pinned">📌</span>' : ''}
+            ${!note.isTrashed && note.isStarred ? '<span class="badge-icon is-starred" title="Starred">⭐</span>' : ''}
+            ${note.isTrashed ? '<span class="badge-icon restore-btn" title="Restore Note">↺ Restore</span>' : ''}
+          </div>
+        `;
+
+        item.onclick = (e) => {
+          if (e.target.classList.contains('restore-btn') || e.target.textContent.includes('Restore')) {
+            e.stopPropagation();
+            restoreNoteFromTrash(note.id);
+            return;
+          }
+          loadNote(note.id);
+          if (window.innerWidth <= 768) {
+            sidebarPanel.classList.remove('mobile-open');
+          }
+        };
+
+        notesListContainer.appendChild(item);
+      });
+    }
+
+    async function restoreNoteFromTrash(noteId) {
+      const targetNote = notes.find(n => n.id === noteId);
+      if (!targetNote) return;
+
+      targetNote.isTrashed = false;
+      targetNote.updatedAt = Date.now();
+
+      if (activeVaultDbId) {
+        localStorage.setItem(STORAGE_KEY + 'vnotes_' + activeVaultDbId, JSON.stringify(notes));
+      }
+
+      if (activeVaultDbId && activePasswordHash && window.CloudVaultAPI && window.CloudVaultAPI.isReady()) {
+        try {
+          await window.CloudVaultAPI.saveNote(targetNote, activeVaultDbId, activePasswordHash);
+        } catch (e) {
+          console.error('[Restore Note Cloud Error]', e);
+        }
+      }
+
+      showToast('Note restored to active notes!');
+      tabNotesActive.click();
+      loadNote(noteId);
+    }
+
+    inputSearchNotes.oninput = renderSidebarTitles;
+
+    document.getElementById('btnNewNote').onclick = () => {
+      createNewNote(true);
+    };
+
+    document.getElementById('btnDeleteCurrentNote').onclick = async () => {
+      const targetNoteId = currentNoteId;
+      const targetNote = notes.find(n => n.id === targetNoteId);
+      if (!targetNote) return;
+
+      if (targetNote.isTrashed) {
+        showToast('Note is already in Trash');
+        return;
+      }
+
+      if (window.CloudVaultAPI && activeVaultDbId) {
+        try {
+          updateCloudStatusUI('syncing');
+          await window.CloudVaultAPI.deleteNote(targetNoteId, activeVaultDbId, activePasswordHash);
+          updateCloudStatusUI('synced', activeVaultId || 'Cloud Synced');
+        } catch (e) {
+          console.error('[Trash Note Error]', e);
+          updateCloudStatusUI('error', 'Trash Failed');
+          showToast(`⚠️ Cloud delete error: ${formatSupabaseError(e)}`);
+          return;
+        }
+      }
+
+      targetNote.isTrashed = true;
+      targetNote.updatedAt = Date.now();
+
+      if (activeVaultDbId) {
+        localStorage.setItem(STORAGE_KEY + 'vnotes_' + activeVaultDbId, JSON.stringify(notes));
+      }
+
+      const remainingActive = notes.filter(n => !n.isTrashed);
+      if (remainingActive.length === 0) {
+        createNewNote(true);
+      } else {
+        loadNote(remainingActive[0].id);
+      }
+
+      renderSidebarTitles();
+      showToast('Note moved to Trash 🗑️');
+    };
+
+    document.getElementById('btnPinCurrentNote').onclick = () => {
+      const note = notes.find(n => n.id === currentNoteId);
+      if (!note) return;
+      note.isPinned = !note.isPinned;
+      note.updatedAt = Date.now();
+      document.getElementById('btnPinCurrentNote').classList.toggle('is-active', !!note.isPinned);
+      performSaveCurrentNote(false);
+      renderSidebarTitles();
+    };
+
+    document.getElementById('btnStarCurrentNote').onclick = () => {
+      const note = notes.find(n => n.id === currentNoteId);
+      if (!note) return;
+      note.isStarred = !note.isStarred;
+      note.updatedAt = Date.now();
+      document.getElementById('btnStarCurrentNote').classList.toggle('is-active', !!note.isStarred);
+      performSaveCurrentNote(false);
+      renderSidebarTitles();
+    };
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      const nextTheme = isDark ? 'light' : 'dark';
+      html.setAttribute('data-theme', nextTheme);
+      localStorage.setItem(STORAGE_KEY + 'theme', nextTheme);
+
+      document.getElementById('themeIconSun').style.display = isDark ? 'inline-block' : 'none';
+      document.getElementById('themeIconMoon').style.display = isDark ? 'none' : 'inline-block';
+    }
+
+    document.getElementById('btnToggleTheme').onclick = toggleTheme;
+
+    document.getElementById('btnToggleMobileSidebar').onclick = () => {
+      sidebarPanel.classList.toggle('mobile-open');
+    };
+
+    function updateStats() {
+      const text = noteBodyArea.innerText || '';
+      const words = (text.trim().match(/\S+/g) || []).length;
+      const chars = text.length;
+      counterStatsLabel.textContent = `${words} words • ${chars} characters`;
+    }
+
+    function showToast(msg) {
+      toastMessage.textContent = msg;
+      toastMessage.style.display = 'block';
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toastMessage.style.display = 'none';
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    const savedTheme = localStorage.getItem(STORAGE_KEY + 'theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeIconSun').style.display = savedTheme === 'light' ? 'inline-block' : 'none';
+    document.getElementById('themeIconMoon').style.display = savedTheme === 'light' ? 'none' : 'inline-block';
+
+    syncAvatarUI();
+
+    async function bootApplication() {
+      initSupabaseClient();
+
+      const stored = getStoredCredentials();
+      const hasValidCreds = isConfigValid(stored.url, stored.key);
+
+      if (activeVaultHash && activeVaultDbId && activePasswordHash && hasValidCreds) {
+        updateCloudStatusUI('syncing');
+        try {
+          const cloudRecord = await window.CloudVaultAPI.unlockVault(activeVaultHash, activePasswordHash);
+
+          if (!cloudRecord || !cloudRecord.id) {
+            console.warn('[Supabase] Stored vault session expired or changed. Prompting unlock.');
+            updateCloudStatusUI('error', 'Vault Locked');
+            showVaultModal();
+            return;
+          }
+
+          activeVaultDbId = cloudRecord.id;
+          if (cloudRecord.name) userName = cloudRecord.name;
+          if (cloudRecord.avatar) userAvatar = cloudRecord.avatar;
+          syncAvatarUI();
+
+          await syncCurrentVaultNotes();
+        } catch (err) {
+          console.error('[Boot Reconnect Error]', err);
+          updateCloudStatusUI('error', 'Vault Locked');
+          showVaultModal();
+        }
+      } else {
+        updateCloudStatusUI('offline', 'Vault Locked');
+        showVaultModal();
+      }
+    }
+
+    // Launch app on window load
+    window.addEventListener('load', bootApplication);
+  </script>
+</body>
+</html>
