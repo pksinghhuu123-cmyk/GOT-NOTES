@@ -2262,71 +2262,64 @@
       const range = sel.getRangeAt(0);
       if (!editorEl.contains(range.commonAncestorContainer)) return false;
 
-      let queryState = null;
+      // 1. Native queryCommandState check
       try {
-        if (['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList'].includes(cmd)) {
-          queryState = document.queryCommandState(cmd);
+        if (document.queryCommandState(cmd)) {
+          return true;
         }
-      } catch (e) {
-        queryState = null;
-      }
+      } catch (e) {}
 
-      if (typeof queryState === 'boolean') {
-        let node = range.startContainer;
-        if (node.nodeType === 3) node = node.parentElement;
-        if (node && editorEl.contains(node)) {
-          if (cmd === 'bold' && (node.closest('b, strong') || queryState)) return queryState;
-          if (cmd === 'italic' && (node.closest('i, em') || queryState)) return queryState;
-          if (cmd === 'underline' && (node.closest('u') || queryState)) return queryState;
-          if (cmd === 'insertUnorderedList') return queryState || !!node.closest('ul');
-          if (cmd === 'insertOrderedList') return queryState || !!node.closest('ol');
-        }
-        return queryState;
-      }
-
-      // DOM fallback if queryCommandState is unavailable
+      // 2. DOM inspection fallback
       let node = range.startContainer;
-      if (node.nodeType === 3) node = node.parentElement;
+      if (node && node.nodeType === 3) node = node.parentElement;
       if (!node || !editorEl.contains(node)) return false;
 
-      if (cmd === 'bold') return !!node.closest('b, strong');
-      if (cmd === 'italic') return !!node.closest('i, em');
-      if (cmd === 'underline') return !!node.closest('u');
-      if (cmd === 'insertUnorderedList') return !!node.closest('ul');
-      if (cmd === 'insertOrderedList') return !!node.closest('ol');
+      if (cmd === 'bold') {
+        if (node.closest('b, strong')) return true;
+        const computedWeight = window.getComputedStyle(node).fontWeight;
+        return computedWeight === 'bold' || parseInt(computedWeight, 10) >= 600;
+      }
+      if (cmd === 'italic') {
+        if (node.closest('i, em')) return true;
+        return window.getComputedStyle(node).fontStyle === 'italic';
+      }
+      if (cmd === 'underline') {
+        if (node.closest('u')) return true;
+        const textDec = window.getComputedStyle(node).textDecorationLine || window.getComputedStyle(node).textDecoration;
+        return textDec.includes('underline');
+      }
+      if (cmd === 'insertUnorderedList') {
+        return !!node.closest('ul');
+      }
+      if (cmd === 'insertOrderedList') {
+        return !!node.closest('ol');
+      }
       return false;
     }
 
+    let lastFormatTriggerTime = 0;
     function handleToggleFormat(cmd) {
+      const now = Date.now();
+      if (now - lastFormatTriggerTime < 80) return;
+      lastFormatTriggerTime = now;
+
       const editorEl = document.getElementById('editorContentInput');
       if (!editorEl) return;
 
       editorEl.focus();
-      restoreEditorSelection();
 
-      if (cmd === 'undo' || cmd === 'redo') {
-        try {
-          document.execCommand(cmd, false, null);
-        } catch (e) {}
-        saveEditorSelection();
-        updateFormattingToolbarState();
-        updateEditorWordCount();
-        return;
+      const sel = window.getSelection();
+      let hasValidSelection = sel && sel.rangeCount > 0 && editorEl.contains(sel.getRangeAt(0).commonAncestorContainer);
+
+      // Restore active selection if focus was slightly shifted
+      if (!hasValidSelection && cachedEditorRange && editorEl.contains(cachedEditorRange.commonAncestorContainer)) {
+        sel.removeAllRanges();
+        sel.addRange(cachedEditorRange);
+        hasValidSelection = true;
       }
 
-      if (cmd === 'insertUnorderedList' || cmd === 'insertOrderedList') {
-        try {
-          document.execCommand(cmd, false, null);
-        } catch (e) {}
-        saveEditorSelection();
-        updateFormattingToolbarState();
-        updateEditorWordCount();
-        return;
-      }
-
-      // Formatting styles: bold, italic, underline
-      let sel = window.getSelection();
-      if (!sel || !sel.rangeCount || !editorEl.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+      // If no selection at all, collapse to end of editor
+      if (!hasValidSelection) {
         const range = document.createRange();
         range.selectNodeContents(editorEl);
         range.collapse(false);
@@ -2334,75 +2327,16 @@
         sel.addRange(range);
       }
 
-      const range = sel.getRangeAt(0);
-      const isCollapsed = range.collapsed;
-      const currentlyActive = isFormatActive(cmd);
+      // Ensure styleWithCSS is false so standard HTML tags (b, i, u) are generated
+      try {
+        document.execCommand('styleWithCSS', false, false);
+      } catch (e) {}
 
-      if (!isCollapsed) {
-        // Selection active: standard browser execCommand toggles formatting cleanly on the selection
-        try {
-          document.execCommand(cmd, false, null);
-        } catch (e) {}
-      } else {
-        // Caret is collapsed:
-        if (currentlyActive) {
-          // Turning format OFF:
-          try {
-            document.execCommand(cmd, false, null);
-          } catch (e) {}
-
-          let node = range.startContainer;
-          let targetTag = getFormatTag(node, cmd);
-
-          if (targetTag) {
-            const textWithoutZeroWidth = targetTag.textContent.replace(/\u200B/g, '');
-            if (textWithoutZeroWidth === '') {
-              // No actual text was typed in this format tag yet; unwrap it so cursor is free of it
-              unwrapFormatTag(targetTag);
-            } else {
-              // Actual text already exists in this tag; step outside it so future typing is normal
-              const neutral = document.createTextNode('\u200B');
-              if (targetTag.nextSibling) {
-                targetTag.parentNode.insertBefore(neutral, targetTag.nextSibling);
-              } else {
-                targetTag.parentNode.appendChild(neutral);
-              }
-              const newRange = document.createRange();
-              newRange.setStart(neutral, 1);
-              newRange.collapse(true);
-              sel.removeAllRanges();
-              sel.addRange(newRange);
-            }
-          }
-        } else {
-          // Turning format ON:
-          try {
-            document.execCommand(cmd, false, null);
-          } catch (e) {}
-
-          let node = range.startContainer;
-          let targetTag = getFormatTag(node, cmd);
-
-          // If browser did not automatically create the enclosing tag, insert a micro-capsule
-          if (!targetTag) {
-            let tagEl;
-            if (cmd === 'bold') tagEl = document.createElement('b');
-            else if (cmd === 'italic') tagEl = document.createElement('i');
-            else if (cmd === 'underline') tagEl = document.createElement('u');
-
-            if (tagEl) {
-              const zeroWidth = document.createTextNode('\u200B');
-              tagEl.appendChild(zeroWidth);
-              range.insertNode(tagEl);
-
-              const newRange = document.createRange();
-              newRange.setStart(zeroWidth, 1);
-              newRange.collapse(true);
-              sel.removeAllRanges();
-              sel.addRange(newRange);
-            }
-          }
-        }
+      // Execute formatting command natively
+      try {
+        document.execCommand(cmd, false, null);
+      } catch (err) {
+        console.warn('[Format Exec Warning]', err);
       }
 
       saveEditorSelection();
@@ -2578,11 +2512,11 @@
 
     function updateFormattingToolbarState() {
       try {
-        const isBold = document.queryCommandState('bold');
-        const isItalic = document.queryCommandState('italic');
-        const isUnderline = document.queryCommandState('underline');
-        const isBullet = document.queryCommandState('insertUnorderedList');
-        const isNumber = document.queryCommandState('insertOrderedList');
+        const isBold = isFormatActive('bold');
+        const isItalic = isFormatActive('italic');
+        const isUnderline = isFormatActive('underline');
+        const isBullet = isFormatActive('insertUnorderedList');
+        const isNumber = isFormatActive('insertOrderedList');
 
         const btnBold = document.getElementById('btnFmtBold');
         const btnItalic = document.getElementById('btnFmtItalic');
@@ -2640,42 +2574,54 @@
           });
         }
       });
-      editorContentArea.addEventListener('keyup', () => {
-        saveEditorSelection();
-        updateFormattingToolbarState();
-      });
-      editorContentArea.addEventListener('mouseup', () => {
-        saveEditorSelection();
-        updateFormattingToolbarState();
-      });
-      editorContentArea.addEventListener('touchend', () => {
-        saveEditorSelection();
-        updateFormattingToolbarState();
-      });
     }
 
-    // Debounced selection change listener to prevent layout thrashing on Android keyboards
-    let selectionChangeTimeout = null;
+    // Track selection changes across editor interactions
     document.addEventListener('selectionchange', () => {
-      if (selectionChangeTimeout) return;
-      selectionChangeTimeout = setTimeout(() => {
-        selectionChangeTimeout = null;
-        const editorEl = document.getElementById('editorContentInput');
-        const sel = window.getSelection();
-        if (editorEl && sel && sel.rangeCount > 0 && editorEl.contains(sel.getRangeAt(0).commonAncestorContainer)) {
-          saveEditorSelection();
-          updateFormattingToolbarState();
-        }
-      }, 50);
+      const sel = window.getSelection();
+      const editorEl = document.getElementById('editorContentInput');
+      if (sel && sel.rangeCount > 0 && editorEl && editorEl.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+        saveEditorSelection();
+        updateFormattingToolbarState();
+      }
     });
 
-    // Keyboard shortcut: Cmd/Ctrl + S to trigger save
+    // Keyboard shortcuts: Cmd/Ctrl + S, B, I, U, Z, Y
     window.addEventListener('keydown', (e) => {
       const editorScreen = document.getElementById('noteEditorScreen');
       const isEditorOpen = editorScreen && !editorScreen.classList.contains('hidden');
-      if (isEditorOpen && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        handleSaveNote();
+      if (isEditorOpen && (e.metaKey || e.ctrlKey)) {
+        const k = e.key.toLowerCase();
+        if (k === 's') {
+          e.preventDefault();
+          handleSaveNote();
+          return;
+        }
+        if (k === 'b') {
+          e.preventDefault();
+          handleExecFormat('bold');
+          return;
+        }
+        if (k === 'i') {
+          e.preventDefault();
+          handleExecFormat('italic');
+          return;
+        }
+        if (k === 'u') {
+          e.preventDefault();
+          handleExecFormat('underline');
+          return;
+        }
+        if (k === 'z') {
+          e.preventDefault();
+          handleExecFormat(e.shiftKey ? 'redo' : 'undo');
+          return;
+        }
+        if (k === 'y') {
+          e.preventDefault();
+          handleExecFormat('redo');
+          return;
+        }
       }
     });
 
